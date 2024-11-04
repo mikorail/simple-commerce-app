@@ -1,101 +1,173 @@
-import Image from "next/image";
+'use client';
+import { useEffect, useState } from 'react';
+import ProductGridListToggle from './components/ProductGridListToggle';
+import FilterComponent from './components/FilterComponent';
+import ProductListItem from './components/ProductListItem';
+import { Product } from './types/products';
+import { fetchProducts } from './services/ProductServices';
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+const HomePage = () => {
+    const [view, setView] = useState<'grid' | 'list'>('grid');
+    const [filters, setFilters] = useState({
+        name: '',
+        category: '',
+        minPrice: '',
+        maxPrice: '',
+        minStock: '',
+        maxStock: '',
+        startDate: '',
+        endDate: '',
+        limit: 10,
+    });
+    const [filteredProducts, setFilteredProducts] = useState<Product[]>([]); // Initialize as empty array
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    const loadProducts = async (page: number = currentPage) => {
+      setLoading(true);
+      setError(null);
+      try {
+          const { products, totalProducts } = await fetchProducts({
+              category: filters.category,
+              minPrice: filters.minPrice,
+              maxPrice: filters.maxPrice,
+              minStock: filters.minStock,
+              maxStock: filters.maxStock,
+              startDate: filters.startDate,
+              endDate: filters.endDate,
+              name: filters.name,
+              page,
+              limit: filters.limit,
+          });
+  
+          console.log('Fetched products:', products, totalProducts);
+          setFilteredProducts(products);
+          setTotalPages(Math.max(1, Math.ceil(totalProducts / filters.limit)));
+          setCurrentPage(page);
+      } catch (err) {
+          console.error('Error loading products:', err);
+          setError('Failed to load products.');
+          setFilteredProducts([]); // Reset to empty array on error
+          setTotalPages(1);
+      } finally {
+          setLoading(false);
+      }
+  };
+    const handleToggle = (viewType: 'grid' | 'list') => setView(viewType);
+
+    const handleFilter = (name: string, value: string) => {
+        setFilters((prevFilters) => ({ ...prevFilters, [name]: value }));
+    };
+
+    const handleApplyFilters = () => {
+        setCurrentPage(1);
+        loadProducts(1);
+    };
+
+    const handlePageChange = (page: number) => {
+        if (page >= 1 && page <= totalPages) {
+            loadProducts(page);
+        }
+    };
+
+    useEffect(() => {
+        loadProducts();
+    }, []); // Only run on mount
+
+    const PaginationControls = () => {
+        // Only show pagination if we have products and more than one page
+        if (totalPages <= 1) return null;
+
+        return (
+            <div className="flex items-center justify-center gap-2 mt-8">
+                <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Previous
+                </button>
+
+                <div className="flex gap-1">
+                    {[...Array(totalPages)].map((_, index) => {
+                        const pageNumber = index + 1;
+                        const isCurrentPage = pageNumber === currentPage;
+
+                        // Show first page, last page, current page, and one page before and after current
+                        if (
+                            pageNumber === 1 ||
+                            pageNumber === totalPages ||
+                            (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                        ) {
+                            return (
+                                <button
+                                    key={pageNumber}
+                                    onClick={() => handlePageChange(pageNumber)}
+                                    className={`px-4 py-2 border rounded-md ${
+                                        isCurrentPage
+                                            ? 'bg-blue-500 text-white'
+                                            : 'hover:bg-gray-100'
+                                    }`}
+                                >
+                                    {pageNumber}
+                                </button>
+                            );
+                        }
+
+                        // Show ellipsis for gaps
+                        if (
+                            pageNumber === currentPage - 2 ||
+                            pageNumber === currentPage + 2
+                        ) {
+                            return <span key={pageNumber} className="px-2">...</span>;
+                        }
+
+                        return null;
+                    })}
+                </div>
+
+                <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Next
+                </button>
+            </div>
+        );
+    };
+
+    if (loading) return <div className="text-center">Loading...</div>;
+    if (error) return <div className="text-red-500 text-center">{error}</div>;
+
+    return (
+        <div className="container mx-auto p-4">
+            <div className="grid grid-cols-1 lg:grid-cols-[3fr_1fr] gap-8">
+                <div>
+                    <ProductGridListToggle onToggle={handleToggle} />
+                    <div className={`flex ${view === 'grid' ? 'flex-wrap -mx-2' : 'flex-col'}`}>
+                        {filteredProducts.length > 0 ? (
+                            filteredProducts.map((product) => (
+                                <ProductListItem key={product.id} product={product} view={view} />
+                            ))
+                        ) : (
+                            <div className="text-center text-gray-500">No products found.</div>
+                        )}
+                    </div>
+                    <PaginationControls />
+                </div>
+                <aside className="hidden lg:block">
+                    <FilterComponent
+                        onFilter={handleFilter}
+                        onApplyFilters={handleApplyFilters}
+                        filters={filters}
+                    />
+                </aside>
+            </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
-}
+    );
+};
+
+export default HomePage;
