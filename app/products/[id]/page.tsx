@@ -153,41 +153,43 @@ export default function ProductPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="container mx-auto p-4 text-white">
-      <div className="flex flex-col md:flex-row gap-8">
-        <div className="w-full md:w-1/2">
+      <div className="flex flex-col md:flex-row md:gap-8">
+        <div className="w-full md:w-1/2 mb-6">
           <img
             src={product.image} // Ensure this key exists in your response
             alt={product.name}
-            className="w-full h-[300px] rounded-lg shadow-lg object-cover"
+            className="w-full h-64 md:h-auto rounded-lg shadow-lg object-cover"
           />
         </div>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold text-white">{product.name}</h1>
-          <p className="text-2xl font-semibold text-gray-200 mt-2">
-            ${product.price.toFixed(2)}
-          </p>
-          <p className="mt-4 text-gray-300 leading-relaxed">
-            {product.description}
-          </p>
-          <div className="mt-6 space-y-3">
-            <div className="flex items-center">
-              <span className="text-gray-700 font-medium">Category:</span>
-              <span className="ml-2 px-3 py-1 bg-slate-600 rounded-full text-sm text-white">
-                {product.category}
-              </span>
-            </div>
-            <div className="flex items-center">
-              <span className="text-gray-700 font-medium">Contact:</span>
-              <a
-                href={`mailto:${product.shopEmail}`}
-                className="ml-2 text-blue-600 hover:text-blue-800"
-              >
-                {product.shopEmail}
-              </a>
-            </div>
-            <div className="flex items-center">
-              <span className="text-gray-700 font-medium">Stock:</span>
-              <span className="ml-2 text-gray-700">{product.stock}</span>
+        <div className="flex-1 flex flex-col justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">{product.name}</h1>
+            <p className="text-2xl font-semibold text-gray-200 mt-2">
+              ${product.price.toFixed(2)}
+            </p>
+            <p className="mt-4 text-gray-300 leading-relaxed">
+              {product.description}
+            </p>
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center">
+                <span className="text-gray-700 font-medium">Category:</span>
+                <span className="ml-2 px-3 py-1 bg-slate-600 rounded-full text-sm text-white">
+                  {product.category}
+                </span>
+              </div>
+              <div className="flex items-center">
+                <span className="text-gray-700 font-medium">Contact:</span>
+                <a
+                  href={`mailto:${product.shopEmail}`}
+                  className="ml-2 text-blue-600 hover:text-blue-800"
+                >
+                  {product.shopEmail}
+                </a>
+              </div>
+              <div className="flex items-center">
+                <span className="text-gray-700 font-medium">Stock:</span>
+                <span className="ml-2 text-gray-700">{product.stock}</span>
+              </div>
             </div>
           </div>
 
@@ -206,28 +208,28 @@ export default function ProductPage({ params }: { params: { id: string } }) {
               max={product.stock}
               value={quantity}
               onChange={handleQuantityChange}
-              className="mt-1 block w-20 border border-gray-300 text-black rounded-md shadow-sm focus:outline-none focus:ring focus:ring-blue-500"
+              className="mt-1 block w-24 border border-gray-300 text-black rounded-md shadow-sm focus:outline-none focus:ring focus:ring-blue-500"
             />
             <div className="flex flex-col items-center space-y-4 mt-6">
               <button
-                onClick={generatePaymentLink}
-                className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition duration-200 ease-in-out"
-              >
-                Generate Payment Link
-              </button>
-
-              <button
                 onClick={handleBuy}
-                className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200 ease-in-out"
+                className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200 ease-in-out w-full"
               >
                 Buy Now
               </button>
-
-              <Link href={`${paymentUrl}`}>
-                <p className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200 ease-in-out">
-                  Payment Link
-                </p>
-              </Link>
+              <button
+                onClick={generatePaymentLink}
+                className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition duration-200 ease-in-out w-full"
+              >
+                Generate Payment Link
+              </button>
+              {paymentUrl && (
+                <Link href={paymentUrl}>
+                  <p className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200 ease-in-out w-full text-center">
+                    Payment Link
+                  </p>
+                </Link>
+              )}
             </div>
           </div>
         </div>
