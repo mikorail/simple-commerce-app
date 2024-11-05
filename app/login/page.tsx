@@ -44,7 +44,7 @@ export default function Login() {
       if (token) {
         localStorage.setItem("authToken", token);
         setSuccess(true);
-        router.push("/");
+        window.location.href = "/";
       } else {
         throw new Error("Login failed. Token not provided.");
       }

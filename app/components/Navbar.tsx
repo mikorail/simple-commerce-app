@@ -1,10 +1,11 @@
 // components/Navbar.tsx
-"use client"
+"use client";
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 const Navbar = () => {
   const [user, setUser] = useState<{ email: string } | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // State for mobile menu
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -53,7 +54,7 @@ const Navbar = () => {
         <div className="text-xl font-semibold">
           <Link href="/" className='text-gray-950 font-extrabold'>MyStore</Link>
         </div>
-        <div className="space-x-4">
+        <div className="hidden md:flex space-x-4">
           {user ? (
             <>
               <Link href="/dashboard" className="text-gray-700 hover:text-gray-900 font-medium">
@@ -75,7 +76,42 @@ const Navbar = () => {
             </>
           )}
         </div>
+
+        {/* Mobile Menu Button */}
+        <div className="md:hidden">
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-gray-700 hover:text-gray-900">
+            {isMenuOpen ? '✖' : '☰'}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden bg-white border-t border-gray-200">
+          <div className="flex flex-col space-y-2 p-4">
+            {user ? (
+              <>
+                <Link href="/dashboard" className="text-gray-700 hover:text-gray-900 font-medium">
+                  Dashboard
+                </Link>
+                <span className="text-gray-700 font-medium">{user.email}</span>
+                <button onClick={handleLogout} className="text-gray-700 hover:text-gray-900 font-medium">
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="text-gray-700 hover:text-gray-900 font-medium">
+                  Login
+                </Link>
+                <Link href="/register" className="text-gray-700 hover:text-gray-900 font-medium">
+                  Register
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
